@@ -64,7 +64,7 @@ echo "Print docker logs..."
 docker logs $container_id
 
 echo "Run integration test..."
-status_code=$(curl -X 'POST' --write-out %{http_code} -k --silent --output /dev/null 'http://localhost:5055/v1/MyService' -H 'accept: application/json' -H 'Content-Type: application/json-patch+json' -d '{ "data": "string", "color": "Red"}')
+status_code=$(curl -X 'POST' --write-out %{http_code} -k --silent --output /dev/null 'http://localhost:5055/MyService' -H 'accept: application/json' -H 'Content-Type: application/json-patch+json' -d '{ "data": "string", "color": "Red"}')
 echo $status_code
 
 if [[ "$status_code" -ne 200 ]] ; then
