@@ -1,0 +1,81 @@
+parameters:
+- name: aws_credentials
+  type: string
+- name: private_ecr_region
+  type: string
+- name: aws_account
+  type: string
+- name: aws_ecr_repository_name
+  type: string
+- name: aws_ecr_tag_without_version
+  type: string
+- name: aws_ecr_extra_tags
+  type: object  
+- name: mcr_registry_uri
+  type: string
+- name: mcr_tag_name
+  type: string
+- name: dockerfile_context_path
+  type: string
+- name: integration_test_dockerfile_local_path
+  type: string
+- name: integration_test_dockerfile_local_overwrite_image_name
+  type: string
+- name: integration_test_dockerfile_context
+  type: string
+- name: teams_webhook_uri
+  type: string
+
+variables:
+  aws_ecr_extra_tags_stringified: ${{join(' ',parameters.aws_ecr_extra_tags)}}
+
+steps:
+- task: AWSShellScript@1
+  displayName: 'Check if ECR repository exists'
+  inputs:
+    awsCredentials: '${{ parameters.aws_credentials }}'
+    regionName: '${{ parameters.private_ecr_region }}'
+    arguments: '${{ parameters.aws_ecr_repository_name }} ${{ parameters.aws_ecr_tag_without_version }}'
+    scriptType: 'filePath'
+    filePath: '$(System.DefaultWorkingDirectory)/shared/scripts/check-if-ecr-repository-exists.sh'
+
+- task: AWSShellScript@1
+  displayName: 'Check if there is a new update'
+  condition: and(succeeded(), ne(variables['skip_update_check'], 'true'))
+  inputs:
+    awsCredentials: '${{ parameters.aws_credentials }}'
+    regionName: '${{ parameters.private_ecr_region }}'
+    arguments: '${{ parameters.mcr_registry_uri}} ${{ parameters.mcr_tag_name }} ${{ parameters.aws_ecr_repository_name }} ${{ parameters.aws_ecr_tag_without_version }}'
+    scriptType: 'filePath'
+    filePath: '$(System.DefaultWorkingDirectory)/shared/scripts/check-if-update-is-needed.sh'
+
+- task: Bash@3
+  displayName: 'Build new image'
+  condition: and(succeeded(), ne(variables['skip_tasks'], 'true'))
+  inputs:
+    filePath: '$(System.DefaultWorkingDirectory)/shared/scripts/docker-build.sh'
+    arguments: '${{ parameters.dockerfile_context_path }} $(Build.BuildNumber)'
+  
+- task: Bash@3
+  displayName: 'Integration Test'
+  condition: and(succeeded(), ne(variables['skip_tasks'], 'true'))
+  inputs:
+    filePath: '$(System.DefaultWorkingDirectory)/shared/scripts/integration-test.sh'
+    arguments: '${{ parameters.aws_ecr_repository_name }} ${{ parameters.integration_test_dockerfile_local_path }} ${{ parameters.integration_test_dockerfile_local_overwrite_image_name }} ${{ parameters.integration_test_dockerfile_context }}'
+  
+- task: AWSShellScript@1
+  displayName: 'Publish new image to private ECR registry'
+  condition: and(succeeded(), ne(variables['skip_tasks'], 'true'))
+  inputs:
+    awsCredentials: '${{ parameters.aws_credentials }}'
+    regionName: '${{ parameters.private_ecr_region }}'
+    arguments: '${{ parameters.aws_account }} ${{ parameters.private_ecr_region }} ${{ parameters.aws_ecr_repository_name }} $(aws_tag_version) "$(aws_ecr_extra_tags_stringified)"'
+    scriptType: 'filePath'
+    filePath: '$(System.DefaultWorkingDirectory)/shared/scripts/push-to-private-ecr.sh'
+
+- task: Bash@3
+  displayName: 'Send notification to teams'
+  condition: and(succeeded(), ne(variables['skip_tasks'], 'true'))
+  inputs:
+    filePath: '$(System.DefaultWorkingDirectory)/shared/scripts/send-teams-notification.sh'
+    arguments: '${{ parameters.aws_ecr_repository_name }} $(aws_tag_version) $(teams_webhook_uri)'
