@@ -55,6 +55,7 @@ docker build -t testapp:latest --progress=plain  -f $integration_test_dockerfile
 
 echo "Analyze docker build log output..."
 grep -q "warning" build.log; [ $? -eq 0 ] && echo "warnings found on the docker build log" && exit 1
+echo "No errors or warnings found on docker build log output"
 
 echo "Run image..."
 container_id=$(docker run -d -p 5055:8080 testapp:latest)

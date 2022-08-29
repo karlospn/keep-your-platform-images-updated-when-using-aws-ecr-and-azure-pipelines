@@ -5,13 +5,13 @@ trigger: none
 #   displayName: Run At 06:00 UTC every Monday
 #   branches:
 #     include:
-#     - master
+#     - main
 
 pool:
   vmImage: ubuntu-latest
 
 extends:
-  template: ../../shared/templates/automatic-update-platform-image-template.yml
+  template: ../../../shared/templates/automatic-update-platform-image-template.yml
   parameters:
       aws_credentials: 'aws-dev'
       aws_account: '951281301247'
@@ -25,6 +25,6 @@ extends:
       mcr_tag_name: '6.0-bullseye-slim' 
       dockerfile_context_path: '$(System.DefaultWorkingDirectory)/platform-images/net6/runtime' 
       integration_test_dockerfile_local_path: '$(System.DefaultWorkingDirectory)/shared/integration-tests/net6/Dockerfile' 
-      integration_test_dockerfile_local_overwrite_image_name: 'mcr.microsoft.com/dotnet/runtime' 
+      integration_test_dockerfile_local_overwrite_image_name: 'runtime:6.0-bullseye-slim' 
       integration_test_dockerfile_context: '$(System.DefaultWorkingDirectory)/shared/integration-tests/net6' 
       teams_webhook_uri: '$(TEAMS_WEBHOOK_URI)'
