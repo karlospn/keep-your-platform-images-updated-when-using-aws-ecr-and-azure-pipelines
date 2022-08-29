@@ -1,0 +1,30 @@
+trigger: none
+
+# schedules:
+# - cron: "0 6 * * 1"
+#   displayName: Run At 06:00 UTC every Monday
+#   branches:
+#     include:
+#     - master
+
+pool:
+  vmImage: ubuntu-latest
+
+extends:
+  template: ../../shared/templates/automatic-update-platform-image-template.yml
+  parameters:
+      aws_credentials: 'aws-dev'
+      aws_account: '951281301247'
+      private_ecr_region: 'eu-west-1'
+      aws_ecr_repository_name: 'sdk' 
+      aws_ecr_tag_without_version: '6.0-bullseye-slim' 
+      aws_ecr_extra_tags:
+      - 6.0
+      - $(Build.BuildNumber)
+      mcr_registry_uri: 'https://mcr.microsoft.com/api/v1/catalog/dotnet/sdk/tags' 
+      mcr_tag_name: '6.0-bullseye-slim' 
+      dockerfile_context_path: '$(System.DefaultWorkingDirectory)/platform-images/net6/sdk' 
+      integration_test_dockerfile_local_path: '$(System.DefaultWorkingDirectory)/shared/integration-tests/net6/Dockerfile' 
+      integration_test_dockerfile_local_overwrite_image_name: 'mcr.microsoft.com/dotnet/sdk' 
+      integration_test_dockerfile_context: '$(System.DefaultWorkingDirectory)/shared/integration-tests/net6' 
+      teams_webhook_uri: '$(TEAMS_WEBHOOK_URI)'

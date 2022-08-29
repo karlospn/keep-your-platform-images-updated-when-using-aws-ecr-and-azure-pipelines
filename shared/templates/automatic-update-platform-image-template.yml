@@ -1,9 +1,9 @@
 parameters:
 - name: aws_credentials
   type: string
-- name: private_ecr_region
-  type: string
 - name: aws_account
+  type: string
+- name: private_ecr_region
   type: string
 - name: aws_ecr_repository_name
   type: string
