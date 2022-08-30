@@ -25,6 +25,9 @@ parameters:
   type: string
 - name: teams_webhook_uri
   type: string
+- name: force_update
+  type: string
+  default: false
 
 variables:
   aws_ecr_extra_tags_stringified: ${{join(' ',parameters.aws_ecr_extra_tags)}}
@@ -32,6 +35,7 @@ variables:
 steps:
 - task: AWSShellScript@1
   displayName: 'Check if ECR repository exists'
+  condition: and(succeeded(), ne(variables['skip_update_check'], 'true'), eq('${{ parameters.force_update }}', 'false'))
   inputs:
     awsCredentials: '${{ parameters.aws_credentials }}'
     regionName: '${{ parameters.private_ecr_region }}'
@@ -41,13 +45,23 @@ steps:
 
 - task: AWSShellScript@1
   displayName: 'Check if there is a new update'
-  condition: and(succeeded(), ne(variables['skip_update_check'], 'true'))
+  condition: and(succeeded(), ne(variables['skip_update_check'], 'true'), eq('${{ parameters.force_update }}', 'false'))
   inputs:
     awsCredentials: '${{ parameters.aws_credentials }}'
     regionName: '${{ parameters.private_ecr_region }}'
-    arguments: '${{ parameters.mcr_registry_uri}} ${{ parameters.mcr_tag_name }} ${{ parameters.aws_ecr_repository_name }} ${{ parameters.aws_ecr_tag_without_version }}'
+    arguments: '${{ parameters.mcr_registry_uri}} ${{ parameters.mcr_tag_name }} ${{ parameters.aws_ecr_repository_name }} ${{ parameters.aws_ecr_tag_without_version }} ${{ parameters.force_update}}'
     scriptType: 'filePath'
     filePath: '$(System.DefaultWorkingDirectory)/shared/scripts/check-if-update-is-needed.sh'
+
+- task: AWSShellScript@1
+  displayName: 'Check if forced update has been specified'
+  condition: and(succeeded(), eq('${{ parameters.force_update }}', 'true'))
+  inputs:
+    awsCredentials: '${{ parameters.aws_credentials }}'
+    regionName: '${{ parameters.private_ecr_region }}'
+    arguments: '${{ parameters.aws_ecr_repository_name }} ${{ parameters.aws_ecr_tag_without_version }}'
+    scriptType: 'filePath'
+    filePath: '$(System.DefaultWorkingDirectory)/shared/scripts/force-update-process.sh'
 
 - task: Bash@3
   displayName: 'Build new image'

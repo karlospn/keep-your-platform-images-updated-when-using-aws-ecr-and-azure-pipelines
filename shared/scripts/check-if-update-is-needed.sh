@@ -63,20 +63,20 @@ echo "Container with name: $mcr_tag_name was pushed last time on the MCR registr
 aws_image=$(aws ecr describe-images --repository-name $aws_ecr_repository_name --image-ids imageTag=latest)
 
 if [ -z "$aws_image" ]; then
-    echo "Image $aws_ecr_repository_name not found on Vy ALM ECR."
+    echo "Image $aws_ecr_repository_name not found on ECR."
     exit 1
 fi
 
 aws_image_pushed_at=$(echo $aws_image | jq -r '.imageDetails[0].imagePushedAt' | cut -d "T" -f 1)
 
 if [ -z "$aws_image_pushed_at" ]; then
-    echo "Image $aws_ecr_repository_name on Vy ALM ECR do not contain a imagePushedAt attribute."
+    echo "Image $aws_ecr_repository_name on ECR do not contain a imagePushedAt attribute."
     exit 1
 fi
 
 echo "Contaimer with name: $aws_ecr_repository_name was pushed on Vy ECR last time at: $aws_image_pushed_at"
 
-if [[ "$aws_image_pushed_at" > "$mcr_push_date_cleaned" ]] ;
+if [[ "$aws_image_pushed_at" < "$mcr_push_date_cleaned" ]] ;
 then
     echo "There are no new versions of the image in the MCR registry. Nothing further to do."
     echo "##vso[task.setvariable variable=skip_tasks]true"
@@ -94,7 +94,7 @@ for row  in $(echo $aws_image | jq -r '.imageDetails[0].imageTags'); do
 done
 
 if [ -z "$aws_image_tag" ]; then
-    echo "Tag was not found on the Vy ECR image."
+    echo "Tag was not found on the ECR image."
     exit 1
 fi
 
@@ -103,25 +103,25 @@ echo "Now calculating new image tag..."
 
 version=$(echo $aws_image_tag | sed 's/.*-//')
 if [ -z "$version" ]; then
-    echo "Tag version was not found on the Vy ECR image."
+    echo "Tag version was not found on the ECR image."
     exit 1
 fi
 
 major=$(echo $version |  tr -d '"' | cut -d '.' -f 1)
 if [ -z "$major" ]; then
-    echo "Tag major version was not found on the Vy ECR image."
+    echo "Tag major version was not found on the ECR image."
     exit 1
 fi
 
 minor=$(echo $version |  tr -d '"' | cut -d '.' -f 2)
 if [ -z "$minor" ]; then
-    echo "Tag minor version was not found on the Vy ECR image."
+    echo "Tag minor version was not found on the ECR image."
     exit 1
 fi
 
 patch=$(echo $version |  tr -d '"' | tr -d ',' | cut -d '.' -f 3)
 if [ -z "$patch" ]; then
-    echo "Tag patch version was not found on the Vy ECR image."
+    echo "Tag patch version was not found on the ECR image."
     exit 1
 fi
 

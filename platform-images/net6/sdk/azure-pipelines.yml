@@ -1,11 +1,16 @@
 trigger: none
 
-# schedules:
-# - cron: "0 6 * * 1"
-#   displayName: Run At 06:00 UTC every Monday
-#   branches:
-#     include:
-#     - main
+schedules:
+- cron: "0 6 * * 1"
+  displayName: Run At 06:00 UTC every Monday
+  branches:
+    include:
+    - main
+
+parameters:
+- name: force_update
+  type: boolean
+  default: false
 
 pool:
   vmImage: ubuntu-latest
@@ -28,3 +33,4 @@ extends:
       integration_test_dockerfile_local_overwrite_image_name: 'sdk:6.0-bullseye-slim' 
       integration_test_dockerfile_context: '$(System.DefaultWorkingDirectory)/shared/integration-tests/net6' 
       teams_webhook_uri: '$(TEAMS_WEBHOOK_URI)'
+      force_update: ${{ parameters.force_update }}
