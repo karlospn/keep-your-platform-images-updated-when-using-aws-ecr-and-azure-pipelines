@@ -40,7 +40,7 @@ The pipeline gets triggered on a scheduled basis (every Monday at 6:00 UTC), it 
 When trying to update an image if there is NO new update available on the base image then the pipeline just ends there.   
 If there is a new updated base image on the Microsoft registry then the pipeline will create a new version of the platform image, test it, store it into ECR and notify the update into a Teams Channel.
 
-Also if you want to change something on an existing platform image (install some new software, update some existing one, set some permissions, etc) you will want to create a new version of the platform image right away, you can do it setting the ``skip_update = true`` pipeline parameter, that parameter will skip the Microsoft container registry update check and go straight into creating a new platform image.
+Also if you want to change something on an existing platform image (install some new software, update some existing one, set some permissions, etc) you will want to create a new version of the platform image right away, you can do it setting the ``force_update`` pipeline parameter to ``true``, that parameter will skip the Microsoft container registry update check and go straight into creating a new platform image.
 
 ## **Repository structure**
 
