@@ -74,9 +74,9 @@ if [ -z "$aws_image_pushed_at" ]; then
     exit 1
 fi
 
-echo "Contaimer with name: $aws_ecr_repository_name was pushed on Vy ECR last time at: $aws_image_pushed_at"
+echo "Contaimer with name: $aws_ecr_repository_name was pushed on ECR last time at: $aws_image_pushed_at"
 
-if [[ "$aws_image_pushed_at" < "$mcr_push_date_cleaned" ]] ;
+if [[ "$aws_image_pushed_at" > "$mcr_push_date_cleaned" ]] ;
 then
     echo "There are no new versions of the image in the MCR registry. Nothing further to do."
     echo "##vso[task.setvariable variable=skip_tasks]true"
